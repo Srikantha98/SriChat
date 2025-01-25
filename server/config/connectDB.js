@@ -7,11 +7,15 @@ async function connectDB() {
         const connection = mongoose.connection;
 
         connection.on('connected', () => {
-            console.log('Connected to MongoDB');
+            console.log('Successfully connected to MongoDB!');
         });
 
         connection.on('error', (error) => {
             console.error('MongoDB connection error:', error);
+        });
+
+        connection.on('disconnected', () => {
+            console.log('MongoDB connection disconnected!');
         });
         
     } catch (error) {
