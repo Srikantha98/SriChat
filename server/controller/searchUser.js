@@ -1,14 +1,23 @@
-async function logout(request,response){
-    try {
-        const cookieOptions = {
-            http : true,
-            secure : true
-        }
+const UserModel = require('../models/UserModel')
 
-        return response.cookie('token','',cookieOptions).status(200).json({
-            message : "session out",
+async function searchUser(request,response){
+    try {
+        const { search } = request.body
+
+        const query = new RegExp(search,"i","g")
+
+        const user = await UserModel.find({
+            "$or" : [
+                { name : query },
+                { email : query }
+            ]
+        }).select("-password")
+
+        return response.json({
+            message : 'all user',
+            data : user,
             success : true
-    })
+        })
     } catch (error) {
         return response.status(500).json({
             message : error.message || error,
@@ -17,4 +26,4 @@ async function logout(request,response){
     }
 }
 
-module.exports = logout
+module.exports = searchUser

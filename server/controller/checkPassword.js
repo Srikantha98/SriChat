@@ -1,22 +1,37 @@
 const UserModel = require("../models/UserModel")
+const bcryptjs = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
-async function checkEmail(request,response){
+async function checkPassword(request,response){
     try {
-        const { email } = request.body
+        const { password, userId } = request.body
 
-        const checkEmail = await UserModel.findOne({email}).select("-password")
+        const user = await UserModel.findById(userId)
 
-        if(!checkEmail){
+        const verifyPassword = await bcryptjs.compare(password,user.password)
+
+        if(!verifyPassword){
             return response.status(400).json({
-                message : "user not exit",
+                message : "Please check password",
                 error : true
             })
         }
 
-        return response.status(200).json({
-            message : "email verify",
-            success : true,
-            data : checkEmail
+        const tokenData = {
+            id : user._id,
+            email : user.email 
+        }
+        const token = await jwt.sign(tokenData,process.env.JWT_SECREAT_KEY,{ expiresIn : '1d'})
+
+        const cookieOptions = {
+            http : true,
+            secure : true
+        }
+
+        return response.cookie('token',token,cookieOptions).status(200).json({
+            message : "Login successfully",
+            token : token,
+            success :true
         })
 
     } catch (error) {
@@ -27,4 +42,4 @@ async function checkEmail(request,response){
     }
 }
 
-module.exports = checkEmail
+module.exports = checkPassword
