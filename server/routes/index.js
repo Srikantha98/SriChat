@@ -1,45 +1,28 @@
-const UserModel = require('../models/UserModel');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const express = require('express')
+const registerUser = require('../controller/registerUser')
+const checkEmail = require('../controller/checkEmail')
+const checkPassword = require('../controller/checkPassword')
+const userDetails = require('../controller/userDetails')
+const logout = require('../controller/logout')
+const updateUserDetails = require('../controller/updateUserDetails')
+const searchUser = require('../controller/searchUser')
 
-const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+const router = express.Router()
 
-  // Validate input
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Name, email, and password are required.' });
-  }
+//create user api
+router.post('/register',registerUser)
+//check user email
+router.post('/email',checkEmail)
+//check user password
+router.post('/password',checkPassword)
+//login user details
+router.get('/user-details',userDetails)
+//logout user
+router.get('/logout',logout)
+//update user details
+router.post('/update-user',updateUserDetails)
+//search user
+router.post("/search-user",searchUser)
 
-  try {
-    // Check if the email already exists
-    const existingUser = await UserModel.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already in use.' });
-    }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new UserModel({
-      name,
-      email,
-      password: hashedPassword
-    });
-
-    await newUser.save();
-
-    // Generate JWT token
-    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECREAT_KEY, { expiresIn: '1h' });
-
-    res.status(201).json({
-      message: 'User registered successfully.',
-      token
-    });
-  } catch (error) {
-    console.error('Error during registration:', error);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-};
-
-module.exports = registerUser;
+module.exports = router
